@@ -18,3 +18,9 @@ python app.py
 ```
 
 3. Access the app in your web browser at `http://localhost:5000/`
+
+# Sources
+
+Using Flask and Jinja2 templates:
+- https://flask.palletsprojects.com/en/stable
+- https://www.youtube.com/watch?v=4yaG-jFfePc

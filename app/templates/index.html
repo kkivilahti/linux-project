@@ -1,11 +1,81 @@
 <!DOCTYPE html>
 <html lang="fi">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Example app</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Example app</title>
+
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      text-align: center;
+      padding: 2%;
+    }
+
+    h2 {
+      margin-top: 60px;
+    }
+
+    table {
+      margin: auto;
+      min-width: 450px;
+      max-width: 80%;
+    }
+
+    table, th, td {
+      border: 1px solid #bdbdbd;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 3px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    input.form-input {
+      width: 250px;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Welcome!</h1>
+  <h1>Guestbook</h1>
+
+  <p>Please leave a message</p>
+
+  <form method="POST">
+    <label for="name">Name</label><br>
+    <input class="form-input" type="text" id="name" name="name" required><br><br>
+
+    <label for="msg">Message</label><br>
+    <input class="form-input" type="text" id="msg" name="msg" required><br><br>
+
+    <input type="submit" value="Submit">
+  </form>
+
+  {% if messages %}
+  <h2>Messages</h2>
+  <table>
+    {% for entry in messages %}
+    <tr>
+      <td><strong>{{ entry.name }}</strong></td>
+      <td>{{ entry.msg }}</td>
+      <td>
+        <form method="POST">
+          <input type="hidden" name="delete_id" value="{{ entry.id }}">
+          <input type="submit" title="delete" value="x">
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
 </body>
+
 </html>
