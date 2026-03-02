@@ -7,39 +7,13 @@
   <title>Example app</title>
 
   <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      text-align: center;
-      padding: 2%;
-    }
-
-    h2 {
-      margin-top: 60px;
-    }
-
-    table {
-      margin: auto;
-      min-width: 450px;
-      max-width: 80%;
-    }
-
-    table, th, td {
-      border: 1px solid #bdbdbd;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 3px;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    input.form-input {
-      width: 250px;
-    }
+    body { font-family: Tahoma, sans-serif; text-align: center; padding: 2%; }
+    h2 { margin-top: 60px; }
+    table { margin: auto; min-width: 450px; max-width: 80%; }
+    table, th, td { border: 1px solid #bdbdbd; border-collapse: collapse; }
+    th, td { padding: 3px; }
+    label { font-size: 12px; font-weight: bold; }
+    input.form-input { width: 250px; }
   </style>
 </head>
 
@@ -64,7 +38,7 @@
     {% for entry in messages %}
     <tr>
       <td><strong>{{ entry.name }}</strong></td>
-      <td>{{ entry.msg }}</td>
+      <td>{{ entry.message }}</td>
       <td>
         <form method="POST">
           <input type="hidden" name="delete_id" value="{{ entry.id }}">
@@ -77,5 +51,4 @@
   {% endif %}
 
 </body>
-
 </html>
