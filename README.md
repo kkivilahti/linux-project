@@ -64,16 +64,22 @@ Note: you might need to update your VM's network settings. I'm using a bridged a
 sudo apt install python3 python3-pip python3-venv mysql-server libapache2-mod-wsgi-py3 git
 ```
 
+After installing MySQL Server, it's a good idea to run the security script to improve the security of your MySQL installation:
+```
+sudo mysql_secure_installation
+```
+This will prompt you to set a root password, remove anonymous users, remove the test database and so on. Follow the prompts to secure your MySQL installation. As this is just an example project, you can choose default options for the prompts, but in a production environment you should choose strong passwords and secure settings.
+
 3. Navigate to `/var/www` and clone the repository there:
 ```
 cd /var/www
 sudo git clone https://github.com/kkivilahti/linux-project.git
 ```
-Note: when using https to clone the repository, you might be prompted to enter your GitHub credentials. If you have two-factor authentication enabled, you will need to use a personal access token INSTEAD of your password.
+Note: when using https to clone the repository, you might be prompted to enter your GitHub credentials. If you have two-factor authentication enabled, you will need to use a **personal access token** instead of your password.
 
 You can create a personal access token in your GitHub account settings under `Developer settings` > `Personal access tokens`. Make sure to give the token appropriate permissions (like repo access) and use it as the password when prompted during the git clone process.
 
-To work *without sudo* in the project directory, you can change the ownership of the directory to your user:
+To work without sudo in the project directory, you can change the ownership of the directory and its contents to your user:
 ```
 sudo chown -R $USER:$USER /var/www/linux-project
 ```
@@ -87,26 +93,45 @@ pip install -r requirements.txt
 ```
 
 5. Set up the MySQL database:
+
+- Change the db username and password as needed. You can update the `app/schema.sql` file to create a new MySQL user and grant permissions to the database.
+
 - Log in to MySQL and initialize the database by running the following command in your terminal:
 ```
 sudo mysql -u root -p < app/schema.sql
 ```
-Note: root is the default MySQL user. If you have a different user, replace `root` with your MySQL username.
+This will create the `guestbook` database and the `messages` table, and a new user with the specified username and password.
 
-Open the MySQL monitor and test the connection:
+Open the MySQL monitor and test the connection with the new user credentials:
 ```
-sudo mysql
+sudo mysql -u <username> -p
+
+# for example:
+sudo mysql -u guestuser -p
+```
+
+Then run the following commands to use the `guestbook` database and check the contents of the `messages` table:
+```
 mysql> USE guestbook;
 mysql> SELECT * FROM messages;
 ```
 At this point you should see an empty result set, since there are no messages in the database yet.
+If you like, you can add test data to the database using an INSERT statement:
+```
+mysql> INSERT INTO messages (name, message) VALUES ('Test User', 'Test message');
+```
+Then you can run the SELECT statement again to see the test message in the database.
 
-6. Create a WSGI file for the app:
+6. Create a WSGI file for the app
+
+The WSGI file is the entry point for the application and allows Apache to communicate with the Flask app.
+
+Start by creating a new file named `wsgi.py` in the project directory:
 ```
 nano /var/www/linux-project/wsgi.py
 ```
 
-Add the following content to the file:
+Then add the following content to the file:
 ```
 import sys
 
@@ -115,12 +140,57 @@ sys.path.insert(0, '/var/www/linux-project')
 from app.app import app as application
 ```
 
-TODO: explain the WSGI file and add the next steps for configuring Apache to use it. Also add instructions for setting up the .env file on the server and explain how to keep it secure
 7. Configure Apache settings for the app
 
-8. Restart Apache to apply the changes
+Give Apache permission to access the project files:
+```
+sudo chown -R www-data:www-data /var/www/linux-project
+```
 
-9. Access the app in your browser at `http://<IP_ADDRESS>/` (replace `<IP_ADDRESS>` with your VM's IP address)
+Configure Apache to serve the Flask app by creating a new configuration file:
+```
+sudo nano /etc/apache2/sites-available/guestbook.conf
+```
+
+Add the following content to the file
+(replace `<IP_ADDRESS>` with your VM's IP address):
+```
+<VirtualHost *:80>
+    ServerName <IP_ADDRESS>
+
+    WSGIDaemonProcess guestbook user=www-data group=www-data threads=5 python-home=/var/www/linux-project/venv python-path=/var/www/linux-project
+    WSGIScriptAlias / /var/www/linux-project/wsgi.py
+    WSGIProcessGroup guestbook
+
+    <Directory /var/www/linux-project>
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/guestbook_error.log
+    CustomLog ${APACHE_LOG_DIR}/guestbook_access.log combined
+</VirtualHost>
+```
+
+In short, this configuration file tells Apache how to serve the Flask app and where to store logs. It sets up a WSGI daemon process for the app, specifies the location of the WSGI script, and grants access to the project directory.
+
+
+Next, enable the new site and the WSGI module:
+```
+sudo a2ensite guestbook.conf
+sudo a2enmod wsgi
+```
+
+8. Restart Apache to apply the changes
+```
+sudo systemctl restart apache2
+```
+
+9. Access the app in your browser at `http://<IP_ADDRESS>` (replace `<IP_ADDRESS>` with your VM's IP address). **All should be working now!**
+
+If you run into issues, you can check the Apache error logs for more information:
+```
+sudo tail /var/log/apache2/guestbook_error.log
+```
 
 # Sources
 
@@ -138,6 +208,10 @@ Using MySQL with Python:
 Installing Apache Web Server on Ubuntu:
 - https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-22-04
 
+Using MySQL on Ubuntu:
+- https://docs.rackspace.com/docs/install-mysql-server-on-the-ubuntu-operating-system
+
 Deploying a Flask app using Linux, Apache and WSGI:
 - https://www.youtube.com/watch?v=w0QDAg85Oow
 - https://medium.com/@farhanahmedindia/complete-guide-deploying-a-flask-app-on-apache-ubuntu-c2f5d7b17e20
+- https://httpd.apache.org/docs/2.4/vhosts/examples.html
