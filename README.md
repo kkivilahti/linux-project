@@ -11,14 +11,13 @@ A LAMP stack is a common web development platform that consists of the following
 - **MySQL**: The relational database management system that stores and manages data for the web application.
 - **Python**: The programming language used to develop the web application, often paired with a framework like Flask or Django. (Other popular languages for LAMP stacks include PHP and Perl, but in this project I will be using Python.)
 
-
 # App setup (locally)
 
 The example app is a simple guestbook where users can submit their name and a message, which are then stored in a MySQL database and displayed on the page. The app is built using Flask.
 
 Before running the app, make sure you have **Python**, **pip** and **MySQL Server** installed on your system.
 
-First, clone the repository and navigate to the project directory. Then follow these steps to set up and run the app:
+First, clone the repository and navigate to the project directory. Then follow these steps to set up and run the app locally:
 
 1. Install requirements:
 ```
@@ -26,7 +25,8 @@ pip install -r requirements.txt
 ```
 
 2. Set up the MySQL database:
-- Change the db username and password as needed. Make sure to update both the `app/schema.sql` file and the `.env` file with the same credentials
+- Change the db username and password as needed.
+- Make sure to update the `app/schema.sql` and the `.env` file with the same credentials. You might also want to update the credentials in `app/app.py` file and `connect_db` function, depending on your use case.
 - Example `.env` file:
 ```
 DB_USER=guestuser
@@ -192,7 +192,42 @@ If you run into issues, you can check the Apache error logs for more information
 sudo tail /var/log/apache2/guestbook_error.log
 ```
 
+# Architecture overview
+
+```mermaid
+flowchart LR
+    subgraph Client
+        A[Browser]
+    end
+
+    subgraph Server
+        B[Apache]
+        C[WSGI]
+        D[Flask App]
+    end
+
+    subgraph Database
+        E[(MySQL)]
+    end
+
+    A -->|HTTP Request| B
+    B --> C
+    C --> D
+    D -->|SQL Query| E
+    E -->|Result| D
+    D --> C
+    C --> B
+    B -->|HTTP Response| A
+```
+This diagram illustrates how the different components of the stack interact with each other.
+
+When a user accesses the application through a browser, an HTTP request is sent to the Apache web server. Apache then forwards the request to the WSGI layer, which acts as a bridge between the web server and the Flask application.
+
+The Flask application processes the request, and if needed, interacts with the MySQL database to retrieve or store data. Once the processing is complete, the response is sent back through the same chain - from Flask to WSGI, then to Apache, and finally returned to the user's browser.
+
 # Sources
+
+These are the sources I used when learning about the LAMP stack and deploying the app using Apache.
 
 What is a LAMP stack?
 - https://www.youtube.com/watch?v=tzBgFog6NmY
@@ -215,3 +250,5 @@ Deploying a Flask app using Linux, Apache and WSGI:
 - https://www.youtube.com/watch?v=w0QDAg85Oow
 - https://medium.com/@farhanahmedindia/complete-guide-deploying-a-flask-app-on-apache-ubuntu-c2f5d7b17e20
 - https://httpd.apache.org/docs/2.4/vhosts/examples.html
+
+> *AI tools like ChatGPT were used as a support tool for explanations and text refinement.*
